@@ -11,3 +11,10 @@
 // Keeping the trackball half as master also avoids sending pointer deltas
 // across the split link on every poll.
 #define MASTER_RIGHT
+
+// Mainline does not enable this for the Charybdis, so the only way into the
+// bootloader is holding BOOTSEL while plugging in. With this, tapping reset
+// twice within the timeout does it instead. Only takes effect once this
+// firmware is already on the board.
+#define RP2040_BOOTLOADER_DOUBLE_TAP_RESET
+#define RP2040_BOOTLOADER_DOUBLE_TAP_RESET_TIMEOUT 500U
