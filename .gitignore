@@ -1,14 +1,6 @@
-# qmk_firmware checkout — recreate with `qmk setup`
 /.qmk_firmware/
+/build/
 
-# Build artifacts (QMK copies these to the userspace root)
-
-# clangd
 /.cache/
 /compile_commands.json
-
-# direnv
 /.direnv/
-
-# build artifacts
-/build/

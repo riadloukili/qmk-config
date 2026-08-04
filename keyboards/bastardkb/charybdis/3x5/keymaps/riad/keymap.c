@@ -1,4 +1,3 @@
-// Generated from the VIA export, then hand-maintained. See README.
 #include "riad.h"
 
 #define XXXXXXX KC_NO

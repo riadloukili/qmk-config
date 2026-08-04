@@ -1,20 +1,9 @@
 #pragma once
 
-// The USB cable goes into the RIGHT half — the one with the trackball.
-//
-// Mainline QMK sets no handedness for this board, so `is_keyboard_left()`
-// falls through to `is_keyboard_master()` (split_util.c): whichever half is
-// plugged in is assumed to be the left one. That is the opposite of how the
-// stock BastardKB VIA firmware behaves, and plugging in the right half would
-// mirror the layout.
-//
-// Keeping the trackball half as master also avoids sending pointer deltas
-// across the split link on every poll.
+// WARN: USB goes into the right half. Without this, whichever half is plugged
+// in is treated as the left one and the layout comes out mirrored.
 #define MASTER_RIGHT
 
-// Mainline does not enable this for the Charybdis, so the only way into the
-// bootloader is holding BOOTSEL while plugging in. With this, tapping reset
-// twice within the timeout does it instead. Only takes effect once this
-// firmware is already on the board.
+// NOTE: tap reset twice to enter the bootloader.
 #define RP2040_BOOTLOADER_DOUBLE_TAP_RESET
 #define RP2040_BOOTLOADER_DOUBLE_TAP_RESET_TIMEOUT 500U

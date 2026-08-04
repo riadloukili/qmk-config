@@ -5,18 +5,22 @@ out := "build"
 _default:
     @just --list --unsorted
 
-# Build targets listed in qmk.json. Both args are optional substring filters:
+# Clone qmk_firmware into ./.qmk_firmware and check the toolchain.
+init:
+    qmk setup -y
+
 #   just build                     every target
 #   just build charybdis           every keymap for matching keyboards
 #   just build charybdis riad      that combination
 #   just build "" riad             every keyboard using the riad keymap
+# Build targets from qmk.json, narrowed by optional substring filters.
 build kb="" km="": && _collect
     #!/usr/bin/env bash
     set -euo pipefail
     mapfile -t targets < <(qmk userspace-list 2>&1 \
         | sed -n 's/.*Keyboard: \(.*\), keymap: \(.*\)/\1 \2/p')
     if [ ${#targets[@]} -eq 0 ]; then
-        echo "no build targets in qmk.json — add one with 'qmk userspace-add'" >&2
+        echo "no build targets in qmk.json, add one with 'qmk userspace-add'" >&2
         exit 1
     fi
     matched=0
@@ -37,7 +41,7 @@ build kb="" km="": && _collect
 targets:
     @qmk userspace-list
 
-# QMK hardcodes its artifact copy to the userspace root
+# NOTE: QMK hardcodes its artifact copy to the userspace root
 # (builddefs/common_rules.mk), so move them afterwards.
 _collect:
     @mkdir -p {{ out }}
@@ -45,7 +49,7 @@ _collect:
         -exec mv -f {} {{ out }}/ \;
     @ls -1 {{ out }}
 
-# Put the half into bootloader first (double-tap reset, or QK_BOOT on _MEDIA).
+# NOTE: put the half into bootloader first (tap reset twice, or QK_BOOT).
 # Build and flash. Same filter args as `build`, but must resolve to one target.
 flash kb="" km="":
     #!/usr/bin/env bash

@@ -24,8 +24,8 @@
           ];
 
           shellHook = ''
-            # Repo root, not $PWD — otherwise entering the shell from a
-            # subdirectory points QMK at a path that does not exist.
+            # WARN: repo root, not $PWD. Entering the shell from a
+            # subdirectory would point QMK at a path that does not exist.
             root="$(${pkgs.git}/bin/git rev-parse --show-toplevel 2>/dev/null || echo "$PWD")"
             export QMK_USERSPACE="$root"
             export QMK_HOME="$root/.qmk_firmware"
