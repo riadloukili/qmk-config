@@ -5,9 +5,22 @@ out := "build"
 _default:
     @just --list --unsorted
 
-# Clone qmk_firmware into ./.qmk_firmware and check the toolchain.
+# Check out qmk_firmware at the revision in ./qmk-rev.
 init:
-    qmk setup -y
+    #!/usr/bin/env bash
+    set -euo pipefail
+    rev=$(tr -d '[:space:]' < qmk-rev)
+    echo "qmk_firmware -> $rev"
+    if [ -e "$QMK_HOME/Makefile" ]; then
+        # NOTE: fetch the ref then detach; `checkout <tag>` has no local branch
+        # to land on in a shallow clone.
+        git -C "$QMK_HOME" fetch --depth 1 origin "$rev"
+        git -C "$QMK_HOME" checkout -q --detach FETCH_HEAD
+    else
+        git clone --depth 1 --branch "$rev" \
+            https://github.com/qmk/qmk_firmware.git "$QMK_HOME"
+    fi
+    qmk git-submodule --sync
 
 # NOTE: filter examples:
 #   just build                     every target

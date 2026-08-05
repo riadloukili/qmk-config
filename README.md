@@ -11,7 +11,7 @@ The firmware checkout and every build artifact stay inside this directory.
 
 ```sh
 direnv allow      # or: nix develop
-just init         # clones qmk_firmware into ./.qmk_firmware
+just init         # checks out qmk_firmware at the revision in ./qmk-rev
 just build
 ```
 
@@ -30,6 +30,7 @@ Firmware lands in `build/`.
 
 ```
 qmk.json        build targets, edit via `qmk userspace-add`
+qmk-rev         qmk_firmware revision, used by `just init` and CI
 flake.nix       dev shell (qmk CLI + arm/avr toolchains)
 pyproject.toml  keymap-drawer, synced by uv on shell entry
 justfile        task runner

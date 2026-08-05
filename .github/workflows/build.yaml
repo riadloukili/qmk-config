@@ -12,13 +12,16 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - id: qmk
+        run: echo "rev=$(tr -d '[:space:]' < qmk-rev)" >> "$GITHUB_OUTPUT"
+
       # NOTE: the dev shell points QMK_HOME at ./.qmk_firmware, so checking the
       # firmware out there replaces `just init` and gets actions/checkout's
       # caching.
       - uses: actions/checkout@v7
         with:
           repository: qmk/qmk_firmware
-          ref: master
+          ref: ${{ steps.qmk.outputs.rev }}
           path: .qmk_firmware
           submodules: recursive
 
