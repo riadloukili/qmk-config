@@ -6,6 +6,8 @@ static const host_layout_t *const host_layouts[HOST_LAYOUT_COUNT] = {
     [HOST_LAYOUT_CA] = &host_layout_ca,
 };
 
+_Static_assert(LAY_CA - LAY_US == HOST_LAYOUT_COUNT - 1, "LAY_* keycodes must mirror host_layout_id_t");
+
 typedef union {
     uint32_t raw;
     struct {
@@ -33,6 +35,9 @@ void host_layout_init(void) {
 }
 
 void host_layout_set(host_layout_id_t id) {
+    if (id >= HOST_LAYOUT_COUNT) {
+        return;
+    }
     if (id != config.host_layout) {
         config.host_layout = id;
         eeconfig_update_user(config.raw);
