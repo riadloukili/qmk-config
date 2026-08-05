@@ -31,7 +31,7 @@ Firmware lands in `build/`.
 ```
 qmk.json        build targets, edit via `qmk userspace-add`
 qmk-rev         qmk_firmware revision, used by `just init` and CI
-flake.nix       dev shell (qmk CLI + arm/avr toolchains)
+flake.nix       dev shell; `.#ci` is the same without editor tooling
 pyproject.toml  keymap-drawer, synced by uv on shell entry
 justfile        task runner
 scripts/        host-side tooling (layout widget)
