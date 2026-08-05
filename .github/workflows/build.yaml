@@ -8,12 +8,60 @@ permissions:
 jobs:
   build:
     name: Build
-    uses: qmk/.github/.github/workflows/qmk_userspace_build.yml@main
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # NOTE: the dev shell points QMK_HOME at ./.qmk_firmware, so checking the
+      # firmware out there replaces `just init` and gets actions/checkout's
+      # caching.
+      - uses: actions/checkout@v7
+        with:
+          repository: qmk/qmk_firmware
+          ref: master
+          path: .qmk_firmware
+          submodules: recursive
+
+      - uses: DeterminateSystems/nix-installer-action@v22
+
+      - run: nix develop --command just build
+
+      - uses: actions/upload-artifact@v7
+        if: always() && !cancelled()
+        with:
+          name: Firmware
+          path: |
+            build/*.uf2
+            build/*.hex
+            build/*.bin
 
   # NOTE: deletes and recreates the `latest` release and its tag on every run,
   # so it always holds a build of the current commit.
   publish:
     name: Publish
-    uses: qmk/.github/.github/workflows/qmk_userspace_publish.yml@main
-    if: always() && !cancelled()
     needs: build
+    if: always() && !cancelled()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-tags: true
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: Firmware
+
+      - run: gh release delete latest --cleanup-tag || true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - uses: softprops/action-gh-release@v3
+        with:
+          token: ${{ github.token }}
+          name: Latest firmware
+          tag_name: latest
+          fail_on_unmatched_files: false
+          files: |
+            *.uf2
+            *.hex
+            *.bin
