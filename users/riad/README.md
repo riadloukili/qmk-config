@@ -35,9 +35,16 @@ The active layout is persisted in EEPROM as `host_layout_id_t`. US is id 0, so
 a blank EEPROM boots US. `LAY_*` keycodes select a layout absolutely; there is
 no toggle. Every change prints over `qmk console`.
 
-`host_api.c` exposes the same over raw HID for host-side tooling
-(`scripts/host-layout`): `0x01` gets the active layout, `0x02` sets it by
-name. Responses carry the layout id and name; errors answer `0xFF`.
+## Raw HID API
+
+`host_api.c` exposes the same to host-side tooling (`scripts/host-layout`)
+over QMK raw HID. Requests are 32-byte reports, byte 0 the command:
+
+- `0x01` get the active layout.
+- `0x02` set it; bytes 1.. carry the layout name, NUL-terminated.
+
+On success the response echoes the command in byte 0, the layout id in byte 1,
+and the name from byte 2. On an unknown command or name, byte 0 is `0xFF`.
 
 ## Layer stack
 
@@ -58,7 +65,8 @@ layers must stay below every momentary layer or they shadow it.
 2. Append an id to `host_layout_id_t` and a `LAY_*` keycode in the same
    position.
 3. Create `host_layouts/<name>.c` defining a `host_layout_t`, declare it in
-   `host_layout.h`, register it in `host_layout.c`, add it to `SRC`.
+   `host_layout.h`, register it in `host_layout.c`, add it to `SRC` in
+   `rules.mk`.
 
 ## CSA notes
 

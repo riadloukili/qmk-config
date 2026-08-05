@@ -3,7 +3,7 @@
 Keyboard layouts as C, built with Nix. A QMK [External Userspace][eus], so
 keymaps live in this repo instead of inside a `qmk_firmware` checkout.
 
-Everything stays inside this directory. Nothing is written to `$HOME`.
+The firmware checkout and every build artifact stay inside this directory.
 
 [eus]: https://docs.qmk.fm/newbs_external_userspace
 
@@ -18,9 +18,9 @@ just build
 ## Recipes
 
 ```sh
-just build [kb] [km]   # build targets from qmk.json, args are filters
-just draw  [kb] [km]   # render keymaps to SVG
-just flash [kb] [km]   # build and flash one target
+just build [kb] [km]   # build targets from qmk.json, args are substring filters
+just draw  [kb] [km]   # render each keymap to an SVG beside its keymap.c
+just flash [kb] [km]   # build and flash one target (put it in bootloader first)
 just                   # everything else
 ```
 
