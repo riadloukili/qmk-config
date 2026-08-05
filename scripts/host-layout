@@ -7,22 +7,26 @@
 
   host-layout            print the active layout (us, ca, ...)
   host-layout set ca     set the layout
-  host-layout watch      follow Hyprland layout changes and keep the
-                         keyboard in sync (run via exec-once)
+  host-layout watch      sync the keyboard to Hyprland's layout, now and
+                         on every change (run via exec-once)
 
 The raw interface is found by report descriptor: usage page 0xFF60, usage
 0x61, QMK's raw HID.
 """
 import glob
+import json
 import os
 import select
 import socket
+import string
 import sys
+import time
 
 QMK_RAW_DESCRIPTOR_PREFIX = bytes([0x06, 0x60, 0xFF, 0x09, 0x61])
 REPORT_SIZE = 32
 GET_LAYOUT = 0x01
 SET_LAYOUT = 0x02
+ERROR_RESPONSE = 0xFF
 
 WATCH_DEVICE = "charybdis"
 OS_LAYOUT_NAMES = {
@@ -30,91 +34,188 @@ OS_LAYOUT_NAMES = {
     "Canadian (CSA)": "ca",
 }
 
+REJECTED = object()
+DENIED = object()
+
+LAYOUT_NAME_CHARS = set(string.ascii_lowercase + string.digits + "_-")
+LAYOUT_NAME_MAX = REPORT_SIZE - 2
+
 
 def qmk_raw_nodes():
-    for sysdir in sorted(glob.glob("/sys/class/hidraw/hidraw*")):
-        with open(f"{sysdir}/device/report_descriptor", "rb") as f:
-            if f.read(len(QMK_RAW_DESCRIPTOR_PREFIX)) == QMK_RAW_DESCRIPTOR_PREFIX:
-                yield f"/dev/{os.path.basename(sysdir)}"
+    def index(path):
+        return int(path.rsplit("hidraw", 1)[1])
+
+    for sysdir in sorted(glob.glob("/sys/class/hidraw/hidraw*"), key=index):
+        try:
+            with open(f"{sysdir}/device/report_descriptor", "rb") as f:
+                prefix = f.read(len(QMK_RAW_DESCRIPTOR_PREFIX))
+        except OSError:
+            continue
+        if prefix == QMK_RAW_DESCRIPTOR_PREFIX:
+            yield f"/dev/{os.path.basename(sysdir)}"
 
 
 def query(node, command, payload=b""):
+    """Round-trip one report on a hidraw node.
+
+    Return the response payload, REJECTED if the firmware answered with an
+    error report, or None on timeout or a foreign reply. Raise OSError when
+    the node cannot be opened or accessed.
+    """
     fd = os.open(node, os.O_RDWR)
     try:
         request = bytes([command]) + payload
         request += b"\x00" * (REPORT_SIZE - len(request))
-        os.write(fd, b"\x00" + request)  # leading byte: report id (unnumbered)
+        # NOTE: the leading zero byte is the report id (unnumbered).
+        os.write(fd, b"\x00" + request)
         if not select.select([fd], [], [], 1.0)[0]:
             return None
         response = os.read(fd, REPORT_SIZE)
+        if len(response) < 3:
+            return None
+        if response[0] == ERROR_RESPONSE:
+            return REJECTED
         if response[0] != command:
             return None
-        return response[2:].split(b"\x00")[0].decode()
+        # NOTE: other QMK boards (VIA) share the raw HID descriptor and echo
+        # our command byte with foreign data; accept only a plausible name.
+        name = response[2:].split(b"\x00")[0].decode(errors="replace")
+        if not name or not set(name) <= LAYOUT_NAME_CHARS:
+            return None
+        return name
     finally:
         os.close(fd)
 
 
 def run(command, payload=b""):
+    """Issue a command against the first QMK raw HID device that answers.
+
+    Return the reply payload, REJECTED if a device answered with an error,
+    DENIED if a device was unreadable, or None if no device responded.
+    """
+    rejected = denied = False
     for node in qmk_raw_nodes():
-        layout = query(node, command, payload)
-        if layout:
-            return layout
+        try:
+            result = query(node, command, payload)
+        except PermissionError:
+            denied = True
+            continue
+        except OSError:
+            continue
+        if result is REJECTED:
+            rejected = True
+        elif result:
+            return result
+    if rejected:
+        return REJECTED
+    if denied:
+        return DENIED
     return None
 
 
-def hypr_event_socket():
-    """Connect to the live Hyprland instance.
+def hypr_connect():
+    """Connect to the live Hyprland event socket.
 
+    Return (socket, instance dir), or None when no instance answers.
     HYPRLAND_INSTANCE_SIGNATURE can be stale (dead instance dirs linger in
-    the runtime dir), so fall back to probing every instance socket.
+    the runtime dir), so fall back to probing every instance.
     """
     runtime = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
-    candidates = []
+    instances = []
     if signature := os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
-        candidates.append(f"{runtime}/hypr/{signature}/.socket2.sock")
-    candidates += sorted(glob.glob(f"{runtime}/hypr/*/.socket2.sock"),
-                         key=os.path.getmtime, reverse=True)
-    for path in candidates:
+        instances.append(f"{runtime}/hypr/{signature}")
+    instances += sorted(glob.glob(f"{runtime}/hypr/*"),
+                        key=os.path.getmtime, reverse=True)
+    for instance in instances:
         sock = socket.socket(socket.AF_UNIX)
         try:
-            sock.connect(path)
-            return sock
+            sock.connect(f"{instance}/.socket2.sock")
+            return sock, instance
         except OSError:
             sock.close()
-    raise SystemExit("no running Hyprland instance")
+    return None
+
+
+def sync_to_os(instance):
+    """Set the firmware to the OS layout Hyprland reports for the keyboard."""
+    try:
+        with socket.socket(socket.AF_UNIX) as sock:
+            sock.connect(f"{instance}/.socket.sock")
+            sock.sendall(b"j/devices")
+            raw = b""
+            while chunk := sock.recv(8192):
+                raw += chunk
+        for keyboard in json.loads(raw)["keyboards"]:
+            if WATCH_DEVICE in keyboard["name"]:
+                layout = OS_LAYOUT_NAMES.get(keyboard["active_keymap"])
+                if layout:
+                    run(SET_LAYOUT, layout.encode())
+                return
+    except (OSError, ValueError, KeyError):
+        pass
+
+
+def stream_events(sock):
+    buffer = b""
+    while chunk := sock.recv(4096):
+        buffer += chunk
+        while b"\n" in buffer:
+            line, buffer = buffer.split(b"\n", 1)
+            # NOTE: other events carry client-controlled bytes (window
+            # titles) that may not be valid UTF-8; never decode those.
+            if not line.startswith(b"activelayout>>"):
+                continue
+            device, _, os_layout = line.decode(errors="replace")[14:].partition(",")
+            if WATCH_DEVICE not in device:
+                continue
+            layout = OS_LAYOUT_NAMES.get(os_layout)
+            if layout:
+                run(SET_LAYOUT, layout.encode())
 
 
 def watch():
-    with hypr_event_socket() as sock:
-        buffer = b""
-        while chunk := sock.recv(4096):
-            buffer += chunk
-            while b"\n" in buffer:
-                line, buffer = buffer.split(b"\n", 1)
-                event, _, data = line.decode().partition(">>")
-                if event != "activelayout":
-                    continue
-                device, _, os_layout = data.partition(",")
-                if WATCH_DEVICE not in device:
-                    continue
-                layout = OS_LAYOUT_NAMES.get(os_layout)
-                if layout:
-                    run(SET_LAYOUT, layout.encode())
+    connected = hypr_connect()
+    if connected is None:
+        raise SystemExit("no running Hyprland instance")
+    while connected is not None:
+        sock, instance = connected
+        with sock:
+            sync_to_os(instance)
+            stream_events(sock)
+        # NOTE: EOF means Hyprland went away; wait for a new instance.
+        time.sleep(2)
+        connected = hypr_connect()
 
 
 def main():
     args = sys.argv[1:]
-    if args[:1] == ["watch"]:
+    if args == ["watch"]:
         watch()
         return 0
-    if args[:1] == ["set"] and len(args) == 2:
-        layout = run(SET_LAYOUT, args[1].encode())
+    if not args:
+        command, payload = GET_LAYOUT, b""
+    elif args[0] == "set" and len(args) == 2:
+        command, payload = SET_LAYOUT, args[1].encode()
+        if len(payload) > LAYOUT_NAME_MAX:
+            print(f"layout name too long (max {LAYOUT_NAME_MAX} bytes)", file=sys.stderr)
+            return 2
     else:
-        layout = run(GET_LAYOUT)
-    if layout:
-        print(layout)
+        print(__doc__.rstrip(), file=sys.stderr)
+        return 2
+    result = run(command, payload)
+    if isinstance(result, str):
+        print(result)
         return 0
+    if result is REJECTED:
+        if command == SET_LAYOUT:
+            print(f"rejected: unknown layout {args[1]}", file=sys.stderr)
+        else:
+            print("rejected by keyboard", file=sys.stderr)
+        return 1
     print("no keyboard", file=sys.stderr)
+    if result is DENIED:
+        print("hint: /dev/hidraw* is not accessible, grant access with a udev rule",
+              file=sys.stderr)
     return 1
 
 
