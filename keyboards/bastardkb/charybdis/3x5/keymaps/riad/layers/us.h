@@ -1,4 +1,4 @@
-// US QWERTY.
+// NOTE: US QWERTY.
 #pragma once
 
 // clang-format off

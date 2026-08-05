@@ -1,5 +1,6 @@
-// Canadian Multilingual (CSA). Keycodes its layers cannot express directly:
-// dead keys, and the shifted punctuation CSA moves away from QWERTY.
+// NOTE: Canadian Multilingual (CSA). Handles keycodes its layers cannot
+// express directly: dead keys, and the shifted punctuation CSA moves away
+// from QWERTY.
 #include "riad.h"
 
 static void tap_unmodded(uint16_t keycode) {
@@ -51,7 +52,7 @@ static bool ca_process_record(uint16_t keycode, keyrecord_t *record) {
             tap_dead(CA_DIAE, false);
             return false;
 
-        // On CSA, Shift+, Shift+. and Shift+/ produce ' " and backslash;
+        // NOTE: on CSA, Shift+, Shift+. and Shift+/ produce ' " and backslash;
         // QWERTY expects < > and ?.
         case KC_COMM:
             if (shifted()) {

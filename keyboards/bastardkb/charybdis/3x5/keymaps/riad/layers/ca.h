@@ -1,5 +1,5 @@
-// Canadian Multilingual (CSA). Same physical layout as US; the scancodes
-// differ so the characters on screen do not.
+// NOTE: Canadian Multilingual (CSA). Same physical layout as US; the
+// scancodes differ so the characters on screen do not.
 #pragma once
 
 // clang-format off

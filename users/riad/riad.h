@@ -1,4 +1,4 @@
-// Shared by every keymap named `riad`. Board wiring lives in
+// NOTE: shared by every keymap named `riad`; board wiring lives in
 // keyboards/<vendor>/<board>/keymaps/riad/.
 #pragma once
 
@@ -30,11 +30,11 @@ enum riad_keycodes {
     LAY_US = SAFE_RANGE,
     LAY_CA,
 
-    // CSA has ` and ^ only as dead keys; these emit the literal mark.
+    // NOTE: CSA has ` and ^ only as dead keys; these emit the literal mark.
     CSA_BTICK,
     CSA_CARET,
 
-    // Arm a dead key, then type the vowel. Shift on the vowel capitalizes.
+    // NOTE: arm a dead key, then type the vowel. Shift on the vowel capitalizes.
     CSA_ACUTE,
     CSA_GRAVE,
     CSA_CFLEX,
@@ -45,7 +45,6 @@ enum riad_keycodes {
 // literal ~ sits on level 3 (verified against xkb symbols/ca).
 #define CSA_TILDE ALGR(CA_CCED)
 
-// Home-row mods.
 // WARN: K and L hold the *left* Ctrl/Alt. CSA uses right Alt for level 3 and
 // right Ctrl for level 5, so the right pair are layout selectors, not mods.
 #define HR_A LGUI_T(KC_A)
@@ -57,7 +56,6 @@ enum riad_keycodes {
 #define HR_K LCTL_T(KC_K)
 #define HR_L LALT_T(KC_L)
 
-// Layer taps shared by every host layout.
 #define MOU_Z LT(_MOUSE, KC_Z)
 #define MED_ESC LT(_MEDIA, KC_ESC)
 #define NAV_SPC LT(_NAV, KC_SPC)
@@ -76,5 +74,5 @@ enum riad_keycodes {
 #define CSA_NUM_BSPC LT(_CA_NUM, KC_BSPC)
 #define CSA_ACC_P LT(_CA_ACCENTS, KC_P)
 
-// Board keymaps may implement this to handle their own keycodes first.
+// NOTE: board keymaps may implement this to handle their own keycodes first.
 bool process_record_keymap(uint16_t keycode, keyrecord_t *record);

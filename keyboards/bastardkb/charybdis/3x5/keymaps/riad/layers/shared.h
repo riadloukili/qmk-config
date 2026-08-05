@@ -1,4 +1,4 @@
-// Layers shared by every host layout.
+// NOTE: layers shared by every host layout.
 #pragma once
 
 // clang-format off
