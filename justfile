@@ -41,6 +41,43 @@ build kb="" km="": && _collect
 targets:
     @qmk userspace-list
 
+# Same filter args as `build`.
+# Render each target's keymap to an SVG beside its keymap.c.
+draw kb="" km="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p {{ out }}
+    # NOTE: layer names come from the enum, so they cannot drift from the code.
+    # NOTE: [A-Z_]* not [A-Z]+, or _NUM_US truncates to NUM and collides with
+    # the layer actually named NUM.
+    mapfile -t layers < <(sed -n 's/^\s*_\([A-Z_]*\).*/\1/p' users/riad/riad.h)
+    mapfile -t targets < <(qmk userspace-list 2>&1 \
+        | sed -n 's/.*Keyboard: \(.*\), keymap: \(.*\)/\1 \2/p')
+    for t in "${targets[@]}"; do
+        read -r k m <<<"$t"
+        if [ -n '{{ kb }}' ]; then case "$k" in *'{{ kb }}'*) ;; *) continue ;; esac; fi
+        if [ -n '{{ km }}' ]; then case "$m" in *'{{ km }}'*) ;; *) continue ;; esac; fi
+        # NOTE: the keymap can live at any ancestor of the target, since QMK
+        # searches upwards (3x5/elitec builds from 3x5/keymaps/riad).
+        dir=""
+        p="keyboards/$k"
+        while [ "$p" != "keyboards" ] && [ "$p" != "." ]; do
+            [ -d "$p/keymaps/$m" ] && { dir="$p/keymaps/$m"; break; }
+            p=$(dirname "$p")
+        done
+        [ -n "$dir" ] || { echo "no keymap dir for $k:$m" >&2; exit 1; }
+        echo "==> $dir/keymap.svg"
+        # NOTE: layer grids are macros in layers/*.h, so expand them first.
+        # riad.h is stubbed out, which leaves key aliases (HR_A, MOU_Z) as
+        # tokens: c2json needs LAYOUT(...) calls, the drawing wants aliases.
+        stub="{{ out }}/draw-stub"
+        mkdir -p "$stub" && : >"$stub/riad.h"
+        cpp -P -I "$stub" "$dir/keymap.c" >"{{ out }}/$m.i"
+        qmk c2json -kb "$k" -km "$m" --no-cpp "{{ out }}/$m.i" >"{{ out }}/$m.json"
+        keymap parse -q "{{ out }}/$m.json" -l "${layers[@]}" -o "{{ out }}/$m.yaml"
+        keymap draw "{{ out }}/$m.yaml" -o "$dir/keymap.svg"
+    done
+
 # NOTE: QMK hardcodes its artifact copy to the userspace root
 # (builddefs/common_rules.mk), so move them afterwards.
 _collect:
