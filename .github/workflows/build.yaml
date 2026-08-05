@@ -15,10 +15,17 @@ jobs:
       - id: qmk
         run: echo "rev=$(tr -d '[:space:]' < qmk-rev)" >> "$GITHUB_OUTPUT"
 
-      # NOTE: the dev shell points QMK_HOME at ./.qmk_firmware, so checking the
-      # firmware out there replaces `just init` and gets actions/checkout's
-      # caching.
+      # NOTE: the dev shell points QMK_HOME at ./.qmk_firmware, so restoring or
+      # checking the firmware out there replaces `just init`. The revision is
+      # pinned, so the key only changes when qmk-rev does.
+      - id: firmware
+        uses: actions/cache@v6
+        with:
+          path: .qmk_firmware
+          key: qmk-firmware-${{ steps.qmk.outputs.rev }}
+
       - uses: actions/checkout@v7
+        if: steps.firmware.outputs.cache-hit != 'true'
         with:
           repository: qmk/qmk_firmware
           ref: ${{ steps.qmk.outputs.rev }}
@@ -27,7 +34,13 @@ jobs:
 
       - uses: DeterminateSystems/nix-installer-action@v22
 
-      - run: nix develop --command just build
+      - uses: nix-community/cache-nix-action@v7
+        with:
+          primary-key: nix-${{ hashFiles('flake.lock', 'flake.nix') }}
+          restore-prefixes-first-match: nix-
+          gc-max-store-size: 3G
+
+      - run: nix develop .#ci --command just build
 
       - uses: actions/upload-artifact@v7
         if: always() && !cancelled()
@@ -37,6 +50,13 @@ jobs:
             build/*.uf2
             build/*.hex
             build/*.bin
+
+      # WARN: runs before the cache post-step, keeping object files out of the
+      # firmware cache. Cached objects with restored timestamps can defeat
+      # make's staleness checks.
+      - name: Drop build objects
+        if: always()
+        run: rm -rf .qmk_firmware/.build
 
   # NOTE: deletes and recreates the `latest` release and its tag on every run,
   # so it always holds a build of the current commit.
