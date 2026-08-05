@@ -9,6 +9,7 @@ _default:
 init:
     qmk setup -y
 
+# NOTE: filter examples:
 #   just build                     every target
 #   just build charybdis           every keymap for matching keyboards
 #   just build charybdis riad      that combination
@@ -17,6 +18,8 @@ init:
 build kb="" km="": && _collect
     #!/usr/bin/env bash
     set -euo pipefail
+    kb={{ quote(kb) }}
+    km={{ quote(km) }}
     mapfile -t targets < <(qmk userspace-list 2>&1 \
         | sed -n 's/.*Keyboard: \(.*\), keymap: \(.*\)/\1 \2/p')
     if [ ${#targets[@]} -eq 0 ]; then
@@ -26,14 +29,14 @@ build kb="" km="": && _collect
     matched=0
     for t in "${targets[@]}"; do
         read -r k m <<<"$t"
-        if [ -n '{{ kb }}' ]; then case "$k" in *'{{ kb }}'*) ;; *) continue ;; esac; fi
-        if [ -n '{{ km }}' ]; then case "$m" in *'{{ km }}'*) ;; *) continue ;; esac; fi
+        if [ -n "$kb" ]; then case "$k" in *"$kb"*) ;; *) continue ;; esac; fi
+        if [ -n "$km" ]; then case "$m" in *"$km"*) ;; *) continue ;; esac; fi
         echo "==> $k:$m"
         qmk compile -kb "$k" -km "$m"
         matched=$((matched + 1))
     done
     if [ "$matched" -eq 0 ]; then
-        echo "no target matches kb='{{ kb }}' km='{{ km }}'" >&2
+        echo "no target matches kb=$kb km=$km" >&2
         exit 1
     fi
 
@@ -41,11 +44,12 @@ build kb="" km="": && _collect
 targets:
     @qmk userspace-list
 
-# Same filter args as `build`.
-# Render each target's keymap to an SVG beside its keymap.c.
+# Render each target's keymap to an SVG beside its keymap.c, same filter args as `build`.
 draw kb="" km="":
     #!/usr/bin/env bash
     set -euo pipefail
+    kb={{ quote(kb) }}
+    km={{ quote(km) }}
     mkdir -p {{ out }}
     # NOTE: layer names come from the enum, so they cannot drift from the code.
     # NOTE: [A-Z_]* not [A-Z]+, or _NUM_US truncates to NUM and collides with
@@ -55,8 +59,8 @@ draw kb="" km="":
         | sed -n 's/.*Keyboard: \(.*\), keymap: \(.*\)/\1 \2/p')
     for t in "${targets[@]}"; do
         read -r k m <<<"$t"
-        if [ -n '{{ kb }}' ]; then case "$k" in *'{{ kb }}'*) ;; *) continue ;; esac; fi
-        if [ -n '{{ km }}' ]; then case "$m" in *'{{ km }}'*) ;; *) continue ;; esac; fi
+        if [ -n "$kb" ]; then case "$k" in *"$kb"*) ;; *) continue ;; esac; fi
+        if [ -n "$km" ]; then case "$m" in *"$km"*) ;; *) continue ;; esac; fi
         # NOTE: the keymap can live at any ancestor of the target, since QMK
         # searches upwards (3x5/elitec builds from 3x5/keymaps/riad).
         dir=""
@@ -86,18 +90,20 @@ _collect:
         -exec mv -f {} {{ out }}/ \;
     @ls -1 {{ out }}
 
-# NOTE: put the half into bootloader first (tap reset twice, or QK_BOOT).
+# WARN: put the half into bootloader first (tap reset twice, or QK_BOOT).
 # Build and flash. Same filter args as `build`, but must resolve to one target.
 flash kb="" km="":
     #!/usr/bin/env bash
     set -euo pipefail
+    kb={{ quote(kb) }}
+    km={{ quote(km) }}
     mapfile -t targets < <(qmk userspace-list 2>&1 \
         | sed -n 's/.*Keyboard: \(.*\), keymap: \(.*\)/\1 \2/p')
     sel=()
     for t in "${targets[@]}"; do
         read -r k m <<<"$t"
-        if [ -n '{{ kb }}' ]; then case "$k" in *'{{ kb }}'*) ;; *) continue ;; esac; fi
-        if [ -n '{{ km }}' ]; then case "$m" in *'{{ km }}'*) ;; *) continue ;; esac; fi
+        if [ -n "$kb" ]; then case "$k" in *"$kb"*) ;; *) continue ;; esac; fi
+        if [ -n "$km" ]; then case "$m" in *"$km"*) ;; *) continue ;; esac; fi
         sel+=("$k $m")
     done
     if [ ${#sel[@]} -ne 1 ]; then
