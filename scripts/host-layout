@@ -1,0 +1,122 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = []
+# ///
+"""Query or set the keyboard's host layout over its raw HID API.
+
+  host-layout            print the active layout (us, ca, ...)
+  host-layout set ca     set the layout
+  host-layout watch      follow Hyprland layout changes and keep the
+                         keyboard in sync (run via exec-once)
+
+The raw interface is found by report descriptor: usage page 0xFF60, usage
+0x61, QMK's raw HID.
+"""
+import glob
+import os
+import select
+import socket
+import sys
+
+QMK_RAW_DESCRIPTOR_PREFIX = bytes([0x06, 0x60, 0xFF, 0x09, 0x61])
+REPORT_SIZE = 32
+GET_LAYOUT = 0x01
+SET_LAYOUT = 0x02
+
+WATCH_DEVICE = "charybdis"
+OS_LAYOUT_NAMES = {
+    "English (US)": "us",
+    "Canadian (CSA)": "ca",
+}
+
+
+def qmk_raw_nodes():
+    for sysdir in sorted(glob.glob("/sys/class/hidraw/hidraw*")):
+        with open(f"{sysdir}/device/report_descriptor", "rb") as f:
+            if f.read(len(QMK_RAW_DESCRIPTOR_PREFIX)) == QMK_RAW_DESCRIPTOR_PREFIX:
+                yield f"/dev/{os.path.basename(sysdir)}"
+
+
+def query(node, command, payload=b""):
+    fd = os.open(node, os.O_RDWR)
+    try:
+        request = bytes([command]) + payload
+        request += b"\x00" * (REPORT_SIZE - len(request))
+        os.write(fd, b"\x00" + request)  # leading byte: report id (unnumbered)
+        if not select.select([fd], [], [], 1.0)[0]:
+            return None
+        response = os.read(fd, REPORT_SIZE)
+        if response[0] != command:
+            return None
+        return response[2:].split(b"\x00")[0].decode()
+    finally:
+        os.close(fd)
+
+
+def run(command, payload=b""):
+    for node in qmk_raw_nodes():
+        layout = query(node, command, payload)
+        if layout:
+            return layout
+    return None
+
+
+def hypr_event_socket():
+    """Connect to the live Hyprland instance.
+
+    HYPRLAND_INSTANCE_SIGNATURE can be stale (dead instance dirs linger in
+    the runtime dir), so fall back to probing every instance socket.
+    """
+    runtime = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
+    candidates = []
+    if signature := os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+        candidates.append(f"{runtime}/hypr/{signature}/.socket2.sock")
+    candidates += sorted(glob.glob(f"{runtime}/hypr/*/.socket2.sock"),
+                         key=os.path.getmtime, reverse=True)
+    for path in candidates:
+        sock = socket.socket(socket.AF_UNIX)
+        try:
+            sock.connect(path)
+            return sock
+        except OSError:
+            sock.close()
+    raise SystemExit("no running Hyprland instance")
+
+
+def watch():
+    with hypr_event_socket() as sock:
+        buffer = b""
+        while chunk := sock.recv(4096):
+            buffer += chunk
+            while b"\n" in buffer:
+                line, buffer = buffer.split(b"\n", 1)
+                event, _, data = line.decode().partition(">>")
+                if event != "activelayout":
+                    continue
+                device, _, os_layout = data.partition(",")
+                if WATCH_DEVICE not in device:
+                    continue
+                layout = OS_LAYOUT_NAMES.get(os_layout)
+                if layout:
+                    run(SET_LAYOUT, layout.encode())
+
+
+def main():
+    args = sys.argv[1:]
+    if args[:1] == ["watch"]:
+        watch()
+        return 0
+    if args[:1] == ["set"] and len(args) == 2:
+        layout = run(SET_LAYOUT, args[1].encode())
+    else:
+        layout = run(GET_LAYOUT)
+    if layout:
+        print(layout)
+        return 0
+    print("no keyboard", file=sys.stderr)
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
