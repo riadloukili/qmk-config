@@ -15,47 +15,40 @@ just init         # clones qmk_firmware into ./.qmk_firmware
 just build
 ```
 
-## Build
+## Recipes
 
 ```sh
-just build                 # every target in qmk.json
-just build <keyboard>      # filter by keyboard
-just build "" <keymap>     # filter by keymap
-just build <kb> <km>       # both
-just                       # list all recipes
+just build [kb] [km]   # build targets from qmk.json, args are filters
+just draw  [kb] [km]   # render keymaps to SVG
+just flash [kb] [km]   # build and flash one target
+just                   # everything else
 ```
 
 Firmware lands in `build/`.
 
-## Repo layout
+## Map
 
 ```
-qmk.json      build targets, edit via `qmk userspace-add`
-flake.nix     dev shell (qmk CLI + arm/avr toolchains)
-justfile      task runner
-users/riad/   shared across every keyboard: layer enum, aliases, hooks
-keyboards/    per-board keymaps, each with its own README
+qmk.json        build targets, edit via `qmk userspace-add`
+flake.nix       dev shell (qmk CLI + arm/avr toolchains)
+pyproject.toml  keymap-drawer, synced by uv on shell entry
+justfile        task runner
+scripts/        host-side tooling (layout widget)
+users/riad/     shared behavior and the host layout system  -> its README
+keyboards/      per-board keymaps                            -> their READMEs
 ```
-
-`users/riad/` is picked up automatically by any keymap named `riad`, so layer
-names and aliases stay consistent across boards. Board-specific wiring belongs
-in that board's `keymaps/riad/`.
 
 ## Adding a keyboard
 
 ```sh
-qmk list-keyboards | grep -i <name>                 # find the target
+qmk list-keyboards | grep -i <name>
 mkdir -p keyboards/<vendor>/<board>/keymaps/riad    # write keymap.c
 qmk userspace-add -kb <target> -km riad
 just build
 ```
 
-Start from the board's shipped `default` keymap in
-`.qmk_firmware/keyboards/<path>/keymaps/default/`, and `#include "riad.h"` to
-pick up the shared layers and aliases. `just build` reads `qmk.json`, so the
-justfile needs no edit.
-
-Both the ARM and AVR toolchains are already in the dev shell.
+Include `riad.h` for the shared layers and aliases. Both ARM and AVR
+toolchains are already in the dev shell.
 
 ## Keyboards
 

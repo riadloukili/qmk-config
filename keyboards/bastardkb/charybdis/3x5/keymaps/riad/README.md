@@ -8,26 +8,74 @@ just build charybdis
 
 ## Layout
 
-```
- Q  W  E  R  T        Y  U  I  O  P
- A  S  D  F  G        H  J  K  L  '
- Z  X  C  V  B        N  M  ,  .  /
-    ESC SPC TAB      ENT BSPC
-```
+![keymap](keymap.svg)
+
+Regenerate with `just draw`. Layer grids live in `layers/`, one file per host
+layout; `keymap.c` only assembles them. Shared behavior and the host layout
+system are documented in [users/riad](../../../../../../users/riad/README.md).
 
 Home-row mods on `ASDF` / `JKL'`. Hold a key for its layer:
 
-| Hold | Layer | Contents |
-| --- | --- | --- |
-| `ESC` | `_MEDIA` | volume, transport, `QK_BOOT`, `EE_CLR` |
-| `SPC` | `_NAV` | arrows on `HJKL`, home/end/page |
-| `TAB` | `_FN` | F1–F12 |
-| `ENT` | `_SYM` | shifted symbols |
-| `BSPC` | `_NUM` | digits, brackets |
-| `Z` or `/` | `_MOUSE` | DPI, sniping, drag-scroll, mouse buttons |
+| Hold | Layer |
+| --- | --- |
+| `ESC` | media, `QK_BOOT`, `EE_CLR`, host layout keys |
+| `SPC` | navigation |
+| `TAB` | F1–F12 |
+| `ENT` | symbols |
+| `BSPC` | digits |
+| `Z` or `/` | trackball: DPI, sniping, drag-scroll, buttons |
+| `P` (CA only) | French accents |
 
-`L` sits on left Alt rather than right, since right Alt is AltGr and would
-emit accented characters on non-US layouts.
+## Host layout
+
+The firmware boots in US. `ESC` + `Y` sets US, `ESC` + `U` sets CA; the choice
+is absolute, persisted, and printed over `qmk console`.
+
+The OS must match. Hyprland, pinned per device:
+
+```ini
+device {
+    name = bastard-keyboards-charybdis-nano-(3x5)
+    kb_layout = ca
+    kb_variant = multix
+}
+```
+
+If the two sides disagree, letters still work but symbols are wrong.
+
+### Following the OS
+
+To have an OS-side switch (for example Alt+Shift) carry the firmware along:
+
+```ini
+input {
+    kb_layout = us,ca
+    kb_variant = ,multix
+    kb_options = grp:alt_shift_toggle
+}
+exec-once = <this repo>/scripts/host-layout watch
+```
+
+`watch` listens to Hyprland's layout events for this keyboard and calls the
+firmware's set command, so both sides always agree. `ESC` + `Y`/`U` remain as
+a firmware-only override.
+
+Caveat: home row holds Alt on `S` and Shift on `F`, so an Alt+Shift chord
+built from home-row mods (for example Alt+Shift+arrow) also fires the OS
+toggle.
+
+### Widget
+
+`scripts/host-layout` queries the firmware over raw HID and prints the active
+layout. Waybar:
+
+```jsonc
+"custom/kb-layout": {
+    "exec": "<this repo>/scripts/host-layout",
+    "interval": 5,
+    "format": "⌨ {}"
+},
+```
 
 ## Flashing
 
@@ -49,16 +97,12 @@ changing something structural like `MASTER_RIGHT`.
 **The target has no "Splinky" in it.** QMK's 2025-08-31 restructure removed
 `bastardkb/charybdis/3x5/v2/splinky_3`. The Splinky is an RP2040 Community
 Edition board in an Elite-C footprint, so it builds as
-`bastardkb/charybdis/3x5/elitec` with `CONVERT_TO = rp2040_ce` in `rules.mk`.
-Guides and configs referencing the old path are out of date.
+`bastardkb/charybdis/3x5/elitec` with `CONVERT_TO = rp2040_ce`.
 
-**`MASTER_RIGHT` is required.** Mainline sets no handedness for this board, so
-`is_keyboard_left()` falls through to `is_keyboard_master()`: whichever half
-has USB is assumed to be the left one. Without it, plugging into the trackball
-half mirrors the entire layout.
+**`MASTER_RIGHT` is required.** Mainline sets no handedness, so whichever half
+has USB is assumed to be the left one; without it the layout mirrors.
 
-**RGB Matrix is disabled** in `rules.mk`; this unit has no per-key LEDs. The
-keyboard definition enables it by default, and turning it off saves ~14 KB.
+**RGB Matrix is disabled**; this unit has no per-key LEDs.
 
 **The `UPDATE` button on the PCB is not `BOOTSEL`.** Holding it through
 power-on does not enter the bootloader.
