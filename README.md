@@ -53,3 +53,7 @@ toolchains are already in the dev shell.
 ## Keyboards
 
 - [Charybdis Nano (3x5)](keyboards/bastardkb/charybdis/3x5/keymaps/riad/README.md)
+
+## License
+
+[MIT](LICENSE).
