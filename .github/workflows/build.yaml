@@ -1,0 +1,19 @@
+name: build
+
+on: [push, workflow_dispatch]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build
+    uses: qmk/.github/.github/workflows/qmk_userspace_build.yml@main
+
+  # NOTE: deletes and recreates the `latest` release and its tag on every run,
+  # so it always holds a build of the current commit.
+  publish:
+    name: Publish
+    uses: qmk/.github/.github/workflows/qmk_userspace_publish.yml@main
+    if: always() && !cancelled()
+    needs: build
