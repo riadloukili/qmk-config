@@ -21,6 +21,7 @@
             pkgs.just
             pkgs.git
             pkgs.clang-tools
+            pkgs.uv
           ];
 
           shellHook = ''
@@ -29,6 +30,9 @@
             root="$(${pkgs.git}/bin/git rev-parse --show-toplevel 2>/dev/null || echo "$PWD")"
             export QMK_USERSPACE="$root"
             export QMK_HOME="$root/.qmk_firmware"
+
+            (cd "$root" && uv sync --quiet)
+            export PATH="$root/.venv/bin:$PATH"
           '';
         };
 
