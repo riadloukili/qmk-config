@@ -5,10 +5,14 @@
 # ///
 """Query or set the keyboard's host layout over its raw HID API.
 
-  host-layout            print the active layout (us, ca, ...)
-  host-layout set ca     set the layout
-  host-layout watch      sync the keyboard to Hyprland's layout, now and
-                         on every change (run via exec-once)
+  host-layout                            print the active layout (us, ca, ...)
+  host-layout set ca                     set the layout
+  host-layout arrangement                print the active layout's arrangement
+                                         (qwerty, colemak-dh, ...)
+  host-layout arrangement set colemak-dh set it, within the active layout
+  host-layout watch                      sync the keyboard to Hyprland's
+                                         layout, now and on every change
+                                         (run via exec-once)
 
 The raw interface is found by report descriptor: usage page 0xFF60, usage
 0x61, QMK's raw HID.
@@ -26,6 +30,8 @@ QMK_RAW_DESCRIPTOR_PREFIX = bytes([0x06, 0x60, 0xFF, 0x09, 0x61])
 REPORT_SIZE = 32
 GET_LAYOUT = 0x01
 SET_LAYOUT = 0x02
+GET_ARRANGEMENT = 0x03
+SET_ARRANGEMENT = 0x04
 ERROR_RESPONSE = 0xFF
 
 WATCH_DEVICE = "charybdis"
@@ -192,12 +198,19 @@ def main():
     if args == ["watch"]:
         watch()
         return 0
+    # NOTE: a leading "arrangement" selects the second command family; the
+    # get/set grammar is the same for both.
+    if args and args[0] == "arrangement":
+        noun, get_command, set_command = "arrangement", GET_ARRANGEMENT, SET_ARRANGEMENT
+        args = args[1:]
+    else:
+        noun, get_command, set_command = "layout", GET_LAYOUT, SET_LAYOUT
     if not args:
-        command, payload = GET_LAYOUT, b""
+        command, payload = get_command, b""
     elif args[0] == "set" and len(args) == 2:
-        command, payload = SET_LAYOUT, args[1].encode()
+        command, payload = set_command, args[1].encode()
         if len(payload) > LAYOUT_NAME_MAX:
-            print(f"layout name too long (max {LAYOUT_NAME_MAX} bytes)", file=sys.stderr)
+            print(f"{noun} name too long (max {LAYOUT_NAME_MAX} bytes)", file=sys.stderr)
             return 2
     else:
         print(__doc__.rstrip(), file=sys.stderr)
@@ -207,8 +220,8 @@ def main():
         print(result)
         return 0
     if result is REJECTED:
-        if command == SET_LAYOUT:
-            print(f"rejected: unknown layout {args[1]}", file=sys.stderr)
+        if command == set_command:
+            print(f"rejected: unknown {noun} {args[1]}", file=sys.stderr)
         else:
             print("rejected by keyboard", file=sys.stderr)
         return 1

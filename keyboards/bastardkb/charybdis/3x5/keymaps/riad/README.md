@@ -13,26 +13,31 @@ just build charybdis
 
 Regenerate with `just draw`. Layer content lives in
 [users/riad/layers](../../../../../../users/riad/layers); `keymap.c` only
-binds it to this board's `LAYOUT` macro. Shared behavior and the host layout
-system are documented in
+binds it to this board's `LAYOUT` macro. Shared behavior, the host layout
+system, and arrangements are documented in
 [users/riad](../../../../../../users/riad/README.md).
 
-Home-row mods on `ASDF` / `JKL'`. Hold a key for its layer:
+Home-row mods on the home row of whatever arrangement is active. Hold a key
+for its layer:
 
 | hold | layer |
 | --- | --- |
 | `ESC` | media, `QK_BOOT`, `EE_CLR`, host layout keys |
-| `SPC` | navigation |
+| `SPC` | navigation, arrangement keys |
 | `TAB` | F1-F12 |
 | `ENT` | symbols |
 | `BSPC` | digits |
 | `Z` or `/` | trackball: DPI, sniping, drag-scroll, buttons |
-| `P` (CA only) | French accents |
+| top-right (CA only) | French accents |
 
 ## Host layout
 
 The firmware boots in US. `ESC` + `Y` sets US, `ESC` + `U` sets CA; the choice
 is absolute (no toggle), persisted in EEPROM, and printed over `qmk console`.
+
+Each layout also has up to five arrangements — reorders of its alphas —
+selected with `SPC` + `Y`/`U`/`I`/`O`/`P`. `Y` is always the vanilla QWERTY
+order; `U` is Colemak-DH. The choice persists per layout.
 
 The OS must match. Hyprland, pinned per device:
 
@@ -49,9 +54,11 @@ If the two sides disagree, letters still work but symbols come out wrong.
 `scripts/host-layout` talks to the firmware over raw HID:
 
 ```sh
-scripts/host-layout          # print the active layout (us, ca)
-scripts/host-layout set ca   # set it
-scripts/host-layout watch    # follow Hyprland and keep the firmware in sync
+scripts/host-layout                            # print the active layout (us, ca)
+scripts/host-layout set ca                     # set it
+scripts/host-layout arrangement                # print the active arrangement
+scripts/host-layout arrangement set colemak-dh # set it, within the active layout
+scripts/host-layout watch                      # follow Hyprland and keep the firmware in sync
 ```
 
 The plain invocation also feeds a status widget. Waybar:

@@ -12,6 +12,13 @@
     US_SYM_ENT, US_NUM_BSPC \
 )
 
+#define LAYER_US_CDH_BASE LAYER_ALPHA( \
+    ALPHAS_COLEMAK_DH_1L,        ALPHAS_COLEMAK_DH_1R(KC_QUOT), \
+    ALPHAS_COLEMAK_DH_2L,        ALPHAS_COLEMAK_DH_2R, \
+    ALPHAS_COLEMAK_DH_3L(MOU_Z), ALPHAS_COLEMAK_DH_3R(US_MOU_SLSH), \
+    US_SYM_ENT, US_NUM_BSPC \
+)
+
 #define LAYER_US_NUM LAYOUT_wrapper( \
 /* ╭──────────────┬──────────────┬──────────────┬──────────────┬──────────────╮ ╭──────────────┬──────────────┬──────────────┬──────────────┬──────────────╮ */\
        KC_LBRC    ,     KC_7     ,     KC_8     ,     KC_9     ,   KC_RBRC    ,     XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,\

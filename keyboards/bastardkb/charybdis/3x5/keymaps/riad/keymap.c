@@ -15,7 +15,9 @@
 // WARN: keep entries in enum order; the draw pipeline reads them textually.
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_US_BASE]     = LAYER_US_BASE,
+    [_US_CDH_BASE] = LAYER_US_CDH_BASE,
     [_CA_BASE]     = LAYER_CA_BASE,
+    [_CA_CDH_BASE] = LAYER_CA_CDH_BASE,
 
     [_FN]          = LAYER_FN,
     [_NAV]         = LAYER_NAV,

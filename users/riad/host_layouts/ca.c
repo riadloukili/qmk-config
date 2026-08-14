@@ -74,8 +74,9 @@ static bool ca_process_record(uint16_t keycode, keyrecord_t *record) {
             break;
 
         // WARN: apostrophe is S(CA_COMM), which a mod-tap cannot hold, so the
-        // alias holds the comma and the tap is substituted here.
+        // aliases hold a stand-in and the tap is substituted here.
         case CSA_GUI_QUOT:
+        case CSA_ACC_QUOT:
             if (record->tap.count) {
                 tap_unmodded(shifted() ? CA_DQUO : CA_QUOT);
                 return false;
@@ -87,7 +88,12 @@ static bool ca_process_record(uint16_t keycode, keyrecord_t *record) {
 }
 
 const host_layout_t host_layout_ca = {
-    .name           = "ca",
-    .default_layer  = _CA_BASE,
-    .process_record = ca_process_record,
+    .name = "ca",
+    .arrangements =
+        {
+            {.name = "qwerty", .base_layer = _CA_BASE},
+            {.name = "colemak-dh", .base_layer = _CA_CDH_BASE},
+        },
+    .arrangement_count = 2,
+    .process_record    = ca_process_record,
 };

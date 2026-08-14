@@ -8,9 +8,12 @@
 
 // WARN: key lookup scans layers top-down with the default layer included, so
 // base layers must stay below every momentary layer or they shadow it.
+// _US_BASE stays 0 so a blank EEPROM boots into it.
 enum riad_layers {
     _US_BASE = 0,
+    _US_CDH_BASE,
     _CA_BASE,
+    _CA_CDH_BASE,
 
     _FN,
     _NAV,
@@ -29,6 +32,14 @@ enum riad_keycodes {
     // WARN: same order as host_layout_id_t; host_layout.c maps by offset.
     LAY_US = SAFE_RANGE,
     LAY_CA,
+
+    // WARN: same order as arrangement slots; host_layout.c maps by offset.
+    // ARR_1 is always a layout's vanilla arrangement.
+    ARR_1,
+    ARR_2,
+    ARR_3,
+    ARR_4,
+    ARR_5,
 
     // NOTE: CSA has ` and ^ only as dead keys; these emit the literal mark.
     CSA_BTICK,
@@ -64,7 +75,10 @@ enum riad_keycodes {
 #define CSA_MOU_SLSH LT(_MOUSE, CA_SLSH)
 #define CSA_SYM_ENT LT(_CA_SYM, KC_ENT)
 #define CSA_NUM_BSPC LT(_CA_NUM, KC_BSPC)
+// NOTE: the CA top-right key always holds the accents layer; the tap is the
+// arrangement's: P on qwerty, quote on colemak-dh (substituted like above).
 #define CSA_ACC_P LT(_CA_ACCENTS, KC_P)
+#define CSA_ACC_QUOT LT(_CA_ACCENTS, KC_QUOT)
 
 // NOTE: board keymaps may implement this to handle their own keycodes first.
 bool process_record_keymap(uint16_t keycode, keyrecord_t *record);

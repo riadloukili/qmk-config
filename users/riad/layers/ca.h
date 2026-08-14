@@ -13,6 +13,13 @@
     CSA_SYM_ENT, CSA_NUM_BSPC \
 )
 
+#define LAYER_CA_CDH_BASE LAYER_ALPHA( \
+    ALPHAS_COLEMAK_DH_1L,        ALPHAS_COLEMAK_DH_1R(CSA_ACC_QUOT), \
+    ALPHAS_COLEMAK_DH_2L,        ALPHAS_COLEMAK_DH_2R, \
+    ALPHAS_COLEMAK_DH_3L(MOU_Z), ALPHAS_COLEMAK_DH_3R(CSA_MOU_SLSH), \
+    CSA_SYM_ENT, CSA_NUM_BSPC \
+)
+
 #define LAYER_CA_NUM LAYOUT_wrapper( \
 /* ╭──────────────┬──────────────┬──────────────┬──────────────┬──────────────╮ ╭──────────────┬──────────────┬──────────────┬──────────────┬──────────────╮ */\
        CA_LBRC    ,     CA_7     ,     CA_8     ,     CA_9     ,   CA_RBRC    ,     XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,\

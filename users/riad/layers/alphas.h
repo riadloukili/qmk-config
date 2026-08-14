@@ -1,6 +1,7 @@
-// NOTE: alphas as 5-key row fragments, composed into base layers by
-// LAYER_ALPHA. Home-row mods are positional: HRM_L/HRM_R wrap whatever
-// letters sit on the home row. Slots that differ per host layout (the
+// NOTE: alpha arrangements as 5-key row fragments, composed into base layers
+// by LAYER_ALPHA. Home-row mods are positional: HRM_L/HRM_R wrap whatever
+// letters an arrangement puts on the home row, so a new arrangement is six
+// fragments and one LAYER_* per layout. Slots that differ per layout (the
 // top-right key, quote, slash, thumbs) stay parameters.
 #pragma once
 
@@ -23,6 +24,14 @@
 #define ALPHAS_QWERTY_2R(QUOT)     KC_H, KC_J, KC_K, KC_L, QUOT
 #define ALPHAS_QWERTY_3L(Z)        Z,    KC_X, KC_C, KC_V, KC_B
 #define ALPHAS_QWERTY_3R(SLSH)     KC_N, KC_M, KC_COMM, KC_DOT, SLSH
+
+// NOTE: ; moves to the NUM layer; the top-right slot carries quote.
+#define ALPHAS_COLEMAK_DH_1L       KC_Q, KC_W, KC_F, KC_P, KC_B
+#define ALPHAS_COLEMAK_DH_1R(TOPR) KC_J, KC_L, KC_U, KC_Y, TOPR
+#define ALPHAS_COLEMAK_DH_2L       KC_A, KC_R, KC_S, KC_T, KC_G
+#define ALPHAS_COLEMAK_DH_2R       KC_M, KC_N, KC_E, KC_I, RGUI_T(KC_O)
+#define ALPHAS_COLEMAK_DH_3L(Z)    Z,    KC_X, KC_C, KC_D, KC_V
+#define ALPHAS_COLEMAK_DH_3R(SLSH) KC_K, KC_H, KC_COMM, KC_DOT, SLSH
 
 // NOTE: needs LAYOUT_wrapper, defined by the board keymap before inclusion.
 #define LAYER_ALPHA(R1L, R1R, R2L, R2R, R3L, R3R, ENT, BSPC) LAYOUT_wrapper( \
