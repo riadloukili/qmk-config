@@ -11,9 +11,11 @@ just build charybdis
 
 ![keymap](keymap.svg)
 
-Regenerate with `just draw`. Layer grids live in `layers/`, one file per host
-layout; `keymap.c` only assembles them. Shared behavior and the host layout
-system are documented in [users/riad](../../../../../../users/riad/README.md).
+Regenerate with `just draw`. Layer content lives in
+[users/riad/layers](../../../../../../users/riad/layers); `keymap.c` only
+binds it to this board's `LAYOUT` macro. Shared behavior and the host layout
+system are documented in
+[users/riad](../../../../../../users/riad/README.md).
 
 Home-row mods on `ASDF` / `JKL'`. Hold a key for its layer:
 

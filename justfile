@@ -89,7 +89,9 @@ draw kb="" km="":
         # tokens: c2json needs LAYOUT(...) calls, the drawing wants aliases.
         stub="{{ out }}/draw-stub"
         mkdir -p "$stub" && : >"$stub/riad.h"
-        cpp -P -I "$stub" "$dir/keymap.c" >"{{ out }}/$m.i"
+        # NOTE: the stub comes first so it shadows the real riad.h; layers/*.h
+        # fall through to the userspace copies.
+        cpp -P -I "$stub" -I users/riad "$dir/keymap.c" >"{{ out }}/$m.i"
         qmk c2json -kb "$k" -km "$m" --no-cpp "{{ out }}/$m.i" >"{{ out }}/$m.json"
         keymap parse -q "{{ out }}/$m.json" -l "${layers[@]}" -o "{{ out }}/$m.yaml"
         keymap draw "{{ out }}/$m.yaml" -o "$dir/keymap.svg"

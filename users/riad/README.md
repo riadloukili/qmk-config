@@ -1,7 +1,8 @@
 # users/riad
 
-Behavior shared by every keymap named `riad`. Board wiring stays in each
-board's `keymaps/riad/`.
+Behavior and layer content shared by every keymap named `riad`. Board wiring
+stays in each board's `keymaps/riad/`, which only binds the layers here to
+its `LAYOUT` macro.
 
 | file | holds |
 | --- | --- |
@@ -12,6 +13,10 @@ board's `keymaps/riad/`.
 | `host_layouts/us.c` | US QWERTY |
 | `host_layouts/ca.c` | Canadian Multilingual (CSA) |
 | `host_api.c` | raw HID query API for host-side tooling |
+| `layers/alphas.h` | alpha row fragments, home-row mod wrappers, base composer |
+| `layers/shared.h` | layers shared by every layout: FN, NAV, MEDIA, MOUSE |
+| `layers/us.h` | US base layer and symbol layers |
+| `layers/ca.h` | CA base layer, symbol layers, accents |
 
 ## Host layouts
 
@@ -58,10 +63,26 @@ _CA_NUM  _CA_SYM  _CA_ACCENTS
 Key lookup scans layers top-down with the default layer included, so base
 layers must stay below every momentary layer or they shadow it.
 
+## Layer composition
+
+Base layers are composed, not drawn. `layers/alphas.h` defines the alphas as
+six 5-key row fragments; `LAYER_ALPHA` assembles them with the shared thumb
+row, and `HRM_L`/`HRM_R` wrap the home row in GACS mod-taps — positional, so
+they follow whatever letters sit there. Slots that differ per layout (the
+top-right key, quote, slash, thumbs) stay parameters, filled by each layout's
+`LAYER_*` definitions in `layers/us.h` / `layers/ca.h`.
+
+One-off layers (FN, NAV, symbol layers) remain literal grids; they have no
+duplication to factor out. The board keymap defines
+`LAYOUT_wrapper(...) LAYOUT(__VA_ARGS__)` — the variadic indirection that
+lets fragments expand before the arity check — and lists the `LAYER_*` names
+in enum order.
+
 ## Adding a host layout
 
 1. Add its base and symbol layers to `enum riad_layers` (bases stay at the
-   bottom) and to the board's `layers/` and `keymap.c`.
+   bottom) and a `layers/<name>.h` composing them; include it from the
+   board's `keymap.c` and extend `keymaps[]`.
 2. Append an id to `host_layout_id_t` and a `LAY_*` keycode in the same
    position.
 3. Create `host_layouts/<name>.c` defining a `host_layout_t`, declare it in
@@ -80,8 +101,8 @@ remap them so the characters on screen match US.
 - Shift+`,` `.` `/` produce `'` `"` `\`; `ca.c` restores `<` `>` `?`.
 - Apostrophe is `S(CA_COMM)`, which a mod-tap cannot hold. `CSA_GUI_QUOT`
   holds the comma and `ca.c` substitutes the tap.
-- Right Alt selects level 3 and right Ctrl level 5, so home-row `K`/`L` hold
-  the *left* Ctrl/Alt; the right pair would be layout selectors, not
-  modifiers.
+- Right Alt selects level 3 and right Ctrl level 5, so the right-hand
+  home-row mods hold the *left* Ctrl/Alt; the right pair would be layout
+  selectors, not modifiers.
 - QMK's `CA_TILD` reaches level 5, a dead tilde on current XKB. `CSA_TILDE`
   uses level 3, the literal one.

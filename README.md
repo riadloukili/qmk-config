@@ -35,8 +35,8 @@ flake.nix       dev shell; `.#ci` is the same without editor tooling
 pyproject.toml  keymap-drawer, synced by uv on shell entry
 justfile        task runner
 scripts/        host-side tooling (layout widget)
-users/riad/     shared behavior and the host layout system  -> its README
-keyboards/      per-board keymaps                            -> their READMEs
+users/riad/     shared behavior, layer content, host layouts -> its README
+keyboards/      per-board keymaps, binding those layers      -> their READMEs
 ```
 
 ## Adding a keyboard
@@ -48,7 +48,9 @@ qmk userspace-add -kb <target> -km riad
 just build
 ```
 
-Include `riad.h` for the shared layers and aliases. Both ARM and AVR
+A board's `keymap.c` includes `riad.h`, defines
+`LAYOUT_wrapper(...) LAYOUT(__VA_ARGS__)`, includes the layer headers from
+`users/riad/layers/`, and lists them in `keymaps[]`. Both ARM and AVR
 toolchains are already in the dev shell.
 
 ## Keyboards

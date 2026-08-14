@@ -1,5 +1,5 @@
-// NOTE: shared by every keymap named `riad`; board wiring lives in
-// keyboards/<vendor>/<board>/keymaps/riad/.
+// NOTE: shared by every keymap named `riad`; layer content lives in
+// layers/*.h here, board wiring in keyboards/<vendor>/<board>/keymaps/riad/.
 #pragma once
 
 #include QMK_KEYBOARD_H
@@ -45,17 +45,9 @@ enum riad_keycodes {
 // literal ~ sits on level 3 (verified against xkb symbols/ca).
 #define CSA_TILDE ALGR(CA_CCED)
 
-// WARN: K and L hold the *left* Ctrl/Alt. CSA uses right Alt for level 3 and
-// right Ctrl for level 5, so the right pair are layout selectors, not mods.
-#define HR_A LGUI_T(KC_A)
-#define HR_S LALT_T(KC_S)
-#define HR_D LCTL_T(KC_D)
-#define HR_F LSFT_T(KC_F)
-
-#define HR_J RSFT_T(KC_J)
-#define HR_K LCTL_T(KC_K)
-#define HR_L LALT_T(KC_L)
-
+// WARN: LT() aliases must stay in this file: the draw pipeline stubs it so
+// they reach keymap-drawer as tokens, whose LT regex only takes numeric
+// layers. Plain mod-taps (LGUI_T, ...) parse fine and may live in layers/.
 #define MOU_Z LT(_MOUSE, KC_Z)
 #define MED_ESC LT(_MEDIA, KC_ESC)
 #define NAV_SPC LT(_NAV, KC_SPC)

@@ -1,46 +1,38 @@
-// NOTE: Canadian Multilingual (CSA). Same physical layout as US; the
-// scancodes differ so the characters on screen do not.
+// NOTE: US QWERTY.
 #pragma once
 
 // clang-format off
 
 #include "shared.h"
 
-#define LAYER_CA_BASE LAYER_QWERTY(CSA_ACC_P, CSA_GUI_QUOT, CSA_MOU_SLSH, CSA_SYM_ENT, CSA_NUM_BSPC)
+#define LAYER_US_BASE LAYER_ALPHA( \
+    ALPHAS_QWERTY_1L,        ALPHAS_QWERTY_1R(KC_P), \
+    ALPHAS_QWERTY_2L,        ALPHAS_QWERTY_2R(US_GUI_QUOT), \
+    ALPHAS_QWERTY_3L(MOU_Z), ALPHAS_QWERTY_3R(US_MOU_SLSH), \
+    US_SYM_ENT, US_NUM_BSPC \
+)
 
-#define LAYER_CA_NUM LAYOUT( \
+#define LAYER_US_NUM LAYOUT_wrapper( \
 /* ╭──────────────┬──────────────┬──────────────┬──────────────┬──────────────╮ ╭──────────────┬──────────────┬──────────────┬──────────────┬──────────────╮ */\
-       CA_LBRC    ,     CA_7     ,     CA_8     ,     CA_9     ,   CA_RBRC    ,     XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,\
+       KC_LBRC    ,     KC_7     ,     KC_8     ,     KC_9     ,   KC_RBRC    ,     XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,\
 /* ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤ ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤ */\
-       CA_SCLN    ,     CA_4     ,     CA_5     ,     CA_6     ,    CA_EQL    ,     XXXXXXX    ,   KC_LSFT    ,   KC_LCTL    ,   KC_LALT    ,   KC_LGUI    ,\
+       KC_SCLN    ,     KC_4     ,     KC_5     ,     KC_6     ,    KC_EQL    ,     XXXXXXX    ,   KC_LSFT    ,   KC_LCTL    ,   KC_LALT    ,   KC_LGUI    ,\
 /* ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤ ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤ */\
-      CSA_BTICK   ,     CA_1     ,     CA_2     ,     CA_3     ,   CA_BSLS    ,     XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,\
+        KC_GRV    ,     KC_1     ,     KC_2     ,     KC_3     ,   KC_BSLS    ,     XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,\
 /* ╰──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤ ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────╯ */\
-                                      CA_DOT    ,     CA_0     ,   CA_MINS    ,     XXXXXXX    ,   _______    \
+                                      KC_DOT    ,     KC_0     ,   KC_MINS    ,     XXXXXXX    ,   _______    \
 /*                             ╰──────────────┴──────────────┴──────────────╯ ╰──────────────┴──────────────╯ */\
 )
 
-#define LAYER_CA_SYM LAYOUT( \
+#define LAYER_US_SYM LAYOUT_wrapper( \
 /* ╭──────────────┬──────────────┬──────────────┬──────────────┬──────────────╮ ╭──────────────┬──────────────┬──────────────┬──────────────┬──────────────╮ */\
-       CA_LCBR    ,   CA_AMPR    ,   CA_ASTR    ,   CA_LPRN    ,   CA_RCBR    ,     XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,\
+       KC_LCBR    ,   KC_AMPR    ,   KC_ASTR    ,   KC_LPRN    ,   KC_RCBR    ,     XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,\
 /* ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤ ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤ */\
-       CA_COLN    ,    CA_DLR    ,   CA_PERC    ,  CSA_CARET   ,   CA_PLUS    ,     XXXXXXX    ,   KC_LSFT    ,   KC_LCTL    ,   KC_LALT    ,   KC_LGUI    ,\
+       KC_COLN    ,    KC_DLR    ,   KC_PERC    ,   KC_CIRC    ,   KC_PLUS    ,     XXXXXXX    ,   KC_LSFT    ,   KC_LCTL    ,   KC_LALT    ,   KC_LGUI    ,\
 /* ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤ ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤ */\
-      CSA_TILDE   ,   CA_EXLM    ,    CA_AT     ,   CA_HASH    ,   CA_PIPE    ,     XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,\
+       KC_TILD    ,   KC_EXLM    ,    KC_AT     ,   KC_HASH    ,   KC_PIPE    ,     XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,\
 /* ╰──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤ ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────╯ */\
-                                     CA_LPRN    ,   CA_RPRN    ,   CA_UNDS    ,     _______    ,   XXXXXXX    \
-/*                             ╰──────────────┴──────────────┴──────────────╯ ╰──────────────┴──────────────╯ */\
-)
-
-#define LAYER_CA_ACCENTS LAYOUT( \
-/* ╭──────────────┬──────────────┬──────────────┬──────────────┬──────────────╮ ╭──────────────┬──────────────┬──────────────┬──────────────┬──────────────╮ */\
-       CA_EACU    ,   CA_EGRV    ,   CA_AGRV    ,   CA_UGRV    ,   CA_CCED    ,     XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   _______    ,\
-/* ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤ ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤ */\
-      CSA_ACUTE   ,  CSA_GRAVE   ,  CSA_CFLEX   ,   CSA_DIAE   ,   XXXXXXX    ,     XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,\
-/* ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤ ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤ */\
-       CA_LDAQ    ,   CA_RDAQ    ,    CA_OE     ,   CA_EURO    ,   XXXXXXX    ,     XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,\
-/* ╰──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤ ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────╯ */\
-                                     XXXXXXX    ,   XXXXXXX    ,   XXXXXXX    ,     XXXXXXX    ,   XXXXXXX    \
+                                     KC_LPRN    ,   KC_RPRN    ,   KC_UNDS    ,     _______    ,   XXXXXXX    \
 /*                             ╰──────────────┴──────────────┴──────────────╯ ╰──────────────┴──────────────╯ */\
 )
 
