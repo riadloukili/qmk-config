@@ -37,7 +37,6 @@ extern const host_layout_t host_layout_us;
 extern const host_layout_t host_layout_ca;
 
 void host_layout_init(void);
-void host_layout_set(host_layout_id_t id);
 bool host_layout_set_name(const char *name);
 bool host_layout_process_record(uint16_t keycode, keyrecord_t *record);
 

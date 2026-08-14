@@ -61,7 +61,9 @@ void host_layout_init(void) {
     apply();
 }
 
-void host_layout_set(host_layout_id_t id) {
+// NOTE: internal; callers outside address a layout by name (the HID API) or
+// by keycode.
+static void host_layout_set(host_layout_id_t id) {
     if (id >= HOST_LAYOUT_COUNT) {
         return;
     }
