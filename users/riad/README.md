@@ -13,6 +13,7 @@ its `LAYOUT` macro.
 | `host_layouts/us.c` | US QWERTY |
 | `host_layouts/ca.c` | Canadian Multilingual (CSA) |
 | `host_api.c` | raw HID query API for host-side tooling |
+| `combos.c` | chords over the base layers |
 | `layers/alphas.h` | alpha row fragments, home-row mod wrappers, base composer |
 | `layers/shared.h` | layers shared by every layout: FN, NAV, MEDIA, MOUSE |
 | `layers/us.h` | US base layers and symbol layers |
@@ -56,6 +57,38 @@ each layout's arrangement index lives in a 3-bit field starting at bit 8, so
 every layout remembers its own choice and a blank or legacy EEPROM decodes as
 vanilla everywhere. Switching layouts restores that layout's stored
 arrangement.
+
+## Combos
+
+`combos.c` holds the chords. A combo matches keycodes rather than positions,
+so each arrangement needs its own entry; building those entries out of the
+same fragments the layers use keeps the two from drifting:
+
+```c
+const uint16_t PROGMEM combo_save_qwerty[] = {
+    HRM_L_ALT(ALPHAS_QWERTY_2L), HRM_L_CTL(ALPHAS_QWERTY_2L), COMBO_END};
+```
+
+`HRM_L_ALT`/`HRM_L_CTL` in `layers/alphas.h` pick one key out of a home-row
+fragment and wrap it in the same mod-tap `HRM_L` would, so the chord stays on
+the same two physical keys whatever letters an arrangement puts there. Add a
+picker per slot as chords need it.
+
+| chord | does |
+| --- | --- |
+| alt + ctrl home keys (`S`+`D` qwerty, `R`+`S` colemak-dh) | Ctrl+S |
+
+Host layouts need no entry of their own: CSA puts its letters where QWERTY
+does, so `us` and `ca` share these keycodes.
+
+The table lives in the userspace, not a board's `keymap.c`, which needs one
+thing from `rules.mk`. QMK sizes `key_combos[]` with `ARRAY_SIZE` inside
+`keymap_introspection.c`, so that file has to *see* the definition:
+`INTROSPECTION_KEYMAP_C = combos.c` includes it there, and `combos.c` stays
+out of `SRC` so it is not also compiled on its own.
+
+`just draw` does not render combos — `qmk c2json` drops them, so
+keymap-drawer never sees them.
 
 ## Raw HID API
 

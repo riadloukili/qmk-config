@@ -30,6 +30,12 @@ for its layer:
 | `Z` or `/` | trackball: DPI, sniping, drag-scroll, buttons |
 | top-right (CA only) | French accents |
 
+Chords:
+
+| press together | sends |
+| --- | --- |
+| the alt and ctrl home keys (`S`+`D`, or `R`+`S` on colemak-dh) | Ctrl+S |
+
 ## Host layout
 
 The firmware boots in US. `ESC` + `Y` sets US, `ESC` + `U` sets CA; the choice

@@ -18,6 +18,14 @@
 #define HRM_L_IMPL(K1, K2, K3, K4, K5) LGUI_T(K1), LALT_T(K2), LCTL_T(K3), LSFT_T(K4), K5
 #define HRM_R_IMPL(K1, K2, K3, K4, K5) K1, RSFT_T(K2), LCTL_T(K3), LALT_T(K4), K5
 
+// NOTE: a combo has to name the exact keycode sitting on the layer, mod-tap
+// and all. These pick one key out of the same fragment HRM_L wraps, so a
+// combo follows an arrangement instead of hard-coding its letters.
+#define HRM_L_ALT(...) HRM_L_ALT_IMPL(__VA_ARGS__)
+#define HRM_L_CTL(...) HRM_L_CTL_IMPL(__VA_ARGS__)
+#define HRM_L_ALT_IMPL(K1, K2, K3, K4, K5) LALT_T(K2)
+#define HRM_L_CTL_IMPL(K1, K2, K3, K4, K5) LCTL_T(K3)
+
 #define ALPHAS_QWERTY_1L           KC_Q, KC_W, KC_E, KC_R, KC_T
 #define ALPHAS_QWERTY_1R(TOPR)     KC_Y, KC_U, KC_I, KC_O, TOPR
 #define ALPHAS_QWERTY_2L           KC_A, KC_S, KC_D, KC_F, KC_G
