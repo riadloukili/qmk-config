@@ -14,6 +14,7 @@ its `LAYOUT` macro.
 | `host_layouts/ca.c` | Canadian Multilingual (CSA) |
 | `host_api.c` | raw HID query API for host-side tooling |
 | `combos.c` | chords over the base layers |
+| `config.h` | QMK settings shared by every board |
 | `layers/alphas.h` | alpha row fragments, home-row mod wrappers, base composer |
 | `layers/shared.h` | layers shared by every layout: FN, NAV, MEDIA, MOUSE |
 | `layers/us.h` | US base layers and symbol layers |
@@ -86,6 +87,12 @@ thing from `rules.mk`. QMK sizes `key_combos[]` with `ARRAY_SIZE` inside
 `keymap_introspection.c`, so that file has to *see* the definition:
 `INTROSPECTION_KEYMAP_C = combos.c` includes it there, and `combos.c` stays
 out of `SRC` so it is not also compiled on its own.
+
+Both keys have to be down at once, not merely pressed in sequence: QMK
+clears a key's bit from the combo state on release, so an incomplete chord
+whose first key is let go just emits both letters. `COMBO_TERM` is 35ms
+(`config.h`, down from QMK's 50) to narrow the accidental-overlap window on
+those two adjacent home-row mod-taps. No dwell is needed once both are down.
 
 `just draw` does not render combos — `qmk c2json` drops them, so
 keymap-drawer never sees them.
