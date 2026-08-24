@@ -20,3 +20,21 @@ combo_t key_combos[] = {
     COMBO(combo_save_qwerty, LCTL(KC_S)),
     COMBO(combo_save_colemak_dh, LCTL(KC_S)),
 };
+
+// NOTE: a chord resting on mod-taps must only fire when tapped; held past
+// COMBO_HOLD_TERM it is dropped and the keys go back to being the mods they
+// are. Deciding from the chord's own contents rather than a list of combo
+// indices means anything later placed on the home row inherits this, while a
+// chord on plain keys still fires immediately.
+bool get_combo_must_tap(uint16_t combo_index, combo_t *combo) {
+    uint16_t key;
+    for (uint8_t i = 0; (key = pgm_read_word(&combo->keys[i])) != COMBO_END; i++) {
+        switch (key) {
+            case QK_MOD_TAP ... QK_MOD_TAP_MAX:
+            case QK_LAYER_TAP ... QK_LAYER_TAP_MAX:
+            case QK_MOMENTARY ... QK_MOMENTARY_MAX:
+                return true;
+        }
+    }
+    return false;
+}

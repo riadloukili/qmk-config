@@ -92,7 +92,13 @@ Both keys have to be down at once, not merely pressed in sequence: QMK
 clears a key's bit from the combo state on release, so an incomplete chord
 whose first key is let go just emits both letters. `COMBO_TERM` is 35ms
 (`config.h`, down from QMK's 50) to narrow the accidental-overlap window on
-those two adjacent home-row mod-taps. No dwell is needed once both are down.
+those two adjacent home-row mod-taps.
+
+A chord sitting on mod-taps fires only when *tapped*. `get_combo_must_tap`
+reads that off the chord's own contents rather than a list of combo indices,
+so held past `COMBO_HOLD_TERM` (which defaults to `TAPPING_TERM`) the combo
+is dropped and the keys are the mods they always were — Alt and Ctrl on the
+left home row. The tradeoff is that Ctrl+S lands on release, not on press.
 
 `just draw` does not render combos — `qmk c2json` drops them, so
 keymap-drawer never sees them.
