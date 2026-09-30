@@ -7,7 +7,7 @@ its `LAYOUT` macro.
 | file | holds |
 | --- | --- |
 | `riad.h` | layer enum, custom keycodes, key aliases |
-| `riad.c` | QMK entry points, dispatching to the host layout |
+| `riad.c` | QMK entry points, layout-independent macros, dispatch to the host layout |
 | `host_layout.h` | the interfaces a host layout and an arrangement implement |
 | `host_layout.c` | registry, persistence, switching, dispatch |
 | `host_layouts/us.c` | US QWERTY |
@@ -41,6 +41,17 @@ active layout's hook runs.
 
 `LAY_*` keycodes (on `_MEDIA`, esc + `Y`/`U`) select a layout absolutely;
 there is no toggle. Every change prints over `qmk console`.
+
+## Macros
+
+`riad.c` holds macros bound on the shared layers, so they run on every layout
+and arrangement. A macro that types a character which moves with the OS
+layout (`~` is AltGr+`ç` on CSA) checks `host_layout_active()` and taps the
+right keycode.
+
+| key | sends |
+| --- | --- |
+| space + top-left (`_NAV`) | enter `~` `.`, ssh's escape to drop a hung session |
 
 ## Arrangements
 

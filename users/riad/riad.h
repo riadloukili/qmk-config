@@ -41,6 +41,9 @@ enum riad_keycodes {
     ARR_4,
     ARR_5,
 
+    // NOTE: enter ~ . drops an ssh session.
+    SSH_KILL,
+
     // NOTE: CSA has ` and ^ only as dead keys; these emit the literal mark.
     CSA_BTICK,
     CSA_CARET,
